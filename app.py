@@ -134,6 +134,12 @@ def main():
             else:
                 detected = [name for prefix, name in known_prefixes.items() if clean_key.startswith(prefix)][0]
                 st.caption(f"Clé détectée : {detected}.")
+
+            if clean_key.startswith("hf_"):
+                st.warning(
+                    "Les clés Hugging Face (`hf_…`) ne peuvent pas être utilisées directement avec Gemini. "
+                    "Récupérez une clé Google AI Studio (préfixe `AIza` ou `gsk_`)."
+                )
         
         st.divider()
         
@@ -214,10 +220,19 @@ def main():
                     
                 except Exception as e:
                     st.error("❌ Une erreur est survenue lors de l'analyse.")
-                    
+
                     # Affichage technique de l'erreur
                     st.code(str(e), language="text")
-                    
+
+                    error_text = str(e).lower()
+                    if "api key not valid" in error_text or "api_key_invalid" in error_text:
+                        st.info(
+                            "Google a rejeté la requête car la clé API n'est pas reconnue. "
+                            "Assurez-vous d'utiliser une clé issue de Google AI Studio (préfixe `AIza`) "
+                            "ou d'un compte de service Google AI (`gsk_`). Les jetons Hugging Face (`hf_…`) ne sont pas "
+                            "acceptés directement par l'API Gemini."
+                        )
+
                     # Section de débogage pour la clé API
                     with st.expander("ℹ️ Informations de débogage (Clé API)"):
                         mask_len = len(clean_key)
