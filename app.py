@@ -85,7 +85,7 @@ def process_audio(api_key, file_data, model_name):
         raise e
 
 def main():
-    st.title("🎙️ Diarisation MP3 avec Gemini")
+    st.title("Ségmentation MP3 (Diarization) avec Gemini")
     st.markdown("Segmentation des locuteurs et transcription automatique.")
 
     # --- Sidebar Configuration ---
@@ -171,7 +171,7 @@ def main():
                     
                     # Zone de téléchargement
                     st.download_button(
-                        label="📥 Télécharger la transcription (.txt)",
+                        label="Télécharger la transcription (.txt)",
                         data=output_text,
                         file_name=f"{uploaded_file.name}_diarisation.txt",
                         mime="text/plain"
