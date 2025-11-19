@@ -34,7 +34,7 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     .blue-dialog {
-        background-color: rgba(59, 130, 246, 0.85);
+        background-color: rgba(59, 130, 246, 0.6);
         color: #e0f2ff;
         border: 1px solid rgba(191, 219, 254, 0.6);
         padding: 1rem;
@@ -161,6 +161,13 @@ def main():
         unsafe_allow_html=True,
     )
 
+    if not clean_key:
+        st.markdown(
+            "<div class='blue-dialog'>Veuillez entrer votre clé API Gemini pour lancer une analyse.</div>",
+            unsafe_allow_html=True,
+        )
+        return
+
     known_prefixes = {
         "AIza": "Google AI Studio",
         "gsk_": "Google AI Service Account",
@@ -245,13 +252,6 @@ def main():
         st.audio(uploaded_file, format='audio/mp3')
 
     launch_clicked = st.button("Lancer l'application", type="primary", use_container_width=True)
-
-    if not clean_key:
-        st.markdown(
-            "<div class='blue-dialog'>Veuillez entrer votre clé API Gemini pour lancer une analyse.</div>",
-            unsafe_allow_html=True,
-        )
-        return
 
     if launch_clicked:
         if uploaded_file is None:
