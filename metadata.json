@@ -1,0 +1,5 @@
+{
+  "name": "MP3 Segmentation - gemini 2.5 / 3",
+  "description": "Une application permettant de segmenter le texte selon les locuteurs",
+  "requestFramePermissions": []
+}
