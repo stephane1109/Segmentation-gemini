@@ -224,7 +224,7 @@ def main():
         help="Ajoute un astérisque et remplace les espaces par des underscores."
     )
 
-    st.markdown('<div class="field-label">Importez votre fichier MP3</div>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #ff2d2d;">Importez votre fichier MP3</h3>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "Importer un fichier MP3",
         type=["mp3"],
