@@ -1,1 +1,184 @@
-~∫&}´-jò¢öö+¥V¨¥»~∫&}´-jò≤÷≠â«‚ïÎ"öö+µ+Z∂'äW¨~∫&}´-jò≠Î)¢{∞
+mport streamlit as st
+import os
+import tempfile
+import json
+from google import genai
+from google.genai import types
+
+# Configuration de la page
+st.set_page_config(
+    page_title="Diarisation MP3 - Gemini",
+    page_icon="üéôÔ∏è",
+    layout="centered"
+)
+
+# Styles CSS personnalis√©s
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    .speaker-box {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #30363d;
+    }
+    .speaker-A { background-color: rgba(30, 58, 138, 0.3); border-color: #1e40af; }
+    .speaker-B { background-color: rgba(88, 28, 135, 0.3); border-color: #7e22ce; }
+    .speaker-C { background-color: rgba(20, 83, 45, 0.3); border-color: #15803d; }
+    .default-speaker { background-color: rgba(55, 65, 81, 0.3); border-color: #4b5563; }
+    </style>
+""", unsafe_allow_html=True)
+
+def process_audio(api_key, file_data, model_name):
+    """Envoie l'audio √† Gemini pour analyse."""
+    client = genai.Client(api_key=api_key)
+    
+    prompt = """
+    Analysez le fichier audio fourni et effectuez une segmentation des locuteurs.
+    Votre t√¢che est d'identifier chaque locuteur et de transcrire leur discours.
+    La sortie doit √™tre un tableau JSON valide. Chaque objet du tableau doit repr√©senter un segment de parole et doit contenir les trois champs suivants :
+    1. "speaker": Une cha√Æne de caract√®res identifiant le locuteur (par exemple, "Locuteur A", "Locuteur B").
+    2. "timestamp": Une cha√Æne de caract√®res repr√©sentant l'heure de d√©but du segment de parole au format "HH:MM:SS".
+    3. "text": Une cha√Æne de caract√®res contenant le texte transcrit pour ce segment.
+    """
+
+    # Configuration du sch√©ma de r√©ponse JSON
+    response_schema = {
+        "type": "ARRAY",
+        "items": {
+            "type": "OBJECT",
+            "properties": {
+                "speaker": {"type": "STRING"},
+                "timestamp": {"type": "STRING"},
+                "text": {"type": "STRING"},
+            },
+            "required": ["speaker", "timestamp", "text"],
+        },
+    }
+
+    try:
+        # Cr√©ation d'un fichier temporaire pour l'audio car l'API attend des bytes ou un fichier
+        # Note: Streamlit fournit un objet BytesIO, nous lisons les bytes directement
+        audio_bytes = file_data.read()
+        
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part.from_bytes(data=audio_bytes, mime_type="audio/mpeg"),
+                        types.Part(text=prompt)
+                    ]
+                )
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=response_schema
+            )
+        )
+        
+        return json.loads(response.text)
+    except Exception as e:
+        raise e
+
+def main():
+    st.title("üéôÔ∏è Diarisation MP3 avec Gemini")
+    st.markdown("Segmentation des locuteurs et transcription automatique.")
+
+    # --- Sidebar Configuration ---
+    with st.sidebar:
+        st.header("Configuration")
+        
+        # Gestion de la cl√© API
+        api_key = st.text_input("Cl√© API Gemini", type="password", help="Obtenez votre cl√© sur Google AI Studio")
+        
+        # V√©rification des secrets Streamlit si la cl√© n'est pas entr√©e manuellement
+        if not api_key and "GOOGLE_API_KEY" in st.secrets:
+            api_key = st.secrets["GOOGLE_API_KEY"]
+            st.success("Cl√© API d√©tect√©e dans les secrets.")
+
+        st.divider()
+        
+        model_choice = st.radio(
+            "Mod√®le",
+            ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.0-pro-preview"],
+            index=0,
+            help="Flash est plus rapide, Pro est plus pr√©cis."
+        )
+        
+        # Mapping des noms conviviaux aux noms techniques
+        model_map = {
+            "gemini-2.5-flash": "gemini-2.5-flash",
+            "gemini-2.5-pro": "gemini-2.5-pro", 
+            "gemini-3.0-pro-preview": "gemini-3.0-pro-preview"
+        }
+        
+        use_star_format = st.checkbox("Format *Locuteur_A", value=True, help="Ajoute un ast√©risque et remplace les espaces par des underscores.")
+
+    # --- Main Content ---
+    if not api_key:
+        st.warning("Veuillez entrer votre cl√© API Gemini dans la barre lat√©rale pour commencer.")
+        return
+
+    uploaded_file = st.file_uploader("Choisissez un fichier MP3", type=["mp3"])
+
+    if uploaded_file is not None:
+        st.audio(uploaded_file, format='audio/mp3')
+        
+        if st.button("Lancer l'analyse", type="primary"):
+            with st.spinner("Analyse en cours avec Gemini... Cela peut prendre quelques instants."):
+                try:
+                    # Reset file pointer just in case
+                    uploaded_file.seek(0)
+                    
+                    # Traitement
+                    result = process_audio(api_key, uploaded_file, model_map.get(model_choice, "gemini-2.5-flash"))
+                    
+                    st.success(f"Analyse termin√©e ! {len(result)} segments d√©tect√©s.")
+                    
+                    # Affichage des r√©sultats
+                    output_text = ""
+                    
+                    for item in result:
+                        raw_speaker = item.get('speaker', 'Inconnu')
+                        timestamp = item.get('timestamp', '')
+                        text = item.get('text', '')
+                        
+                        # Formatage du nom du locuteur
+                        display_speaker = raw_speaker
+                        if use_star_format:
+                            display_speaker = f"*{raw_speaker.replace(' ', '_')}"
+                        
+                        # Construction du texte pour l'export
+                        output_text += f"[{timestamp}] {display_speaker}:\n{text}\n\n"
+                        
+                        # D√©termination de la classe CSS pour la couleur
+                        css_class = "default-speaker"
+                        if "A" in raw_speaker: css_class = "speaker-A"
+                        elif "B" in raw_speaker: css_class = "speaker-B"
+                        elif "C" in raw_speaker: css_class = "speaker-C"
+                        
+                        # Rendu visuel
+                        st.markdown(f"""
+                        <div class="speaker-box {css_class}">
+                            <div style="font-weight: bold; margin-bottom: 0.2rem;">{display_speaker} <span style="opacity: 0.6; font-size: 0.8em; font-weight: normal;">[{timestamp}]</span></div>
+                            <div>{text}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Zone de t√©l√©chargement
+                    st.download_button(
+                        label="üì• T√©l√©charger la transcription (.txt)",
+                        data=output_text,
+                        file_name=f"{uploaded_file.name}_diarisation.txt",
+                        mime="text/plain"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"Une erreur est survenue : {str(e)}")
+
+if __name__ == "__main__":
+    main()
