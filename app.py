@@ -241,6 +241,12 @@ def main():
         help="Ajoute un astérisque et remplace les espaces par des underscores."
     )
 
+    remove_timestamp_text = st.checkbox(
+        "Supprimer les timestamps du fichier texte",
+        value=False,
+        help="Le fichier .txt téléchargé n'inclura pas les timestamps ni les deux-points après le nom du locuteur."
+    )
+
     st.markdown('<h3 style="text-align: center; color: #ff2d2d;">Importez votre fichier MP3</h3>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "Importer un fichier MP3",
@@ -277,7 +283,12 @@ def main():
                     if use_star_format:
                         display_speaker = f"*{raw_speaker.replace(' ', '_')}"
 
-                    output_text += f"[{timestamp}] {display_speaker}:\n{text}\n\n"
+                    if remove_timestamp_text:
+                        prefix = display_speaker
+                    else:
+                        prefix = f"[{timestamp}] {display_speaker}:"
+
+                    output_text += f"{prefix}\n{text}\n\n"
 
                     css_class = "default-speaker"
                     if "A" in raw_speaker: css_class = "speaker-A"
