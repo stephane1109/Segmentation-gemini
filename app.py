@@ -100,16 +100,33 @@ def process_audio(api_key, file_data, model_name):
         raise e
 
 def main():
-    st.title("Segmentation de MP3 - Gemini 2.5 et 3")
+    st.markdown(
+        """
+        <h1 style="text-align: center; color: #ff2d2d; margin-bottom: 0;">Segmentation de MP3</h1>
+        <h2 style="text-align: center; color: #ff2d2d; margin-top: 0;">Modèles : Gemini 2.5 et 3</h2>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<p style="text-align: center; margin: 0.5rem 0 0;">'
+        '<a href="https://www.codeandcortex.fr" target="_blank" style="color: #61dafb; text-decoration: none;">www.codeandcortex.fr</a>'
+        "</p>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("<hr style='border: 1px solid rgba(255,255,255,0.4); margin: 1rem 0;'>", unsafe_allow_html=True)
+
     st.markdown(
         """
         Fournissez votre clé API, choisissez le modèle adapté à votre audio, puis téléchargez un MP3.
         Le modèle Gemini 2.5 Flash offre un quota gratuit généreux. Le modèle Gemini 3.0 peut offrir une meilleure précision.
-        Pour les détails complets, consultez la tarification officielle de l'API Gemini.
-        """
+        Pour les détails complets, <a href="https://ai.google.dev/gemini-api/docs/pricing?hl=fr" target="_blank"><mark>consultez la tarification officielle de l'API Gemini</mark></a>.
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.markdown('<h3 style="text-align: center;">Configuration</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #ff2d2d;">Configuration</h3>', unsafe_allow_html=True)
 
     st.markdown('<div class="field-label">Votre Clé API Gemini</div>', unsafe_allow_html=True)
 
@@ -128,9 +145,10 @@ def main():
 
     clean_key = clean_api_key(api_key)
 
-    st.caption(
-        "Votre clé est envoyée de manière sécurisée et n'est pas stockée."
-        " Obtenez votre clé API sur Google AI Studio."
+    st.markdown(
+        "<small>Votre clé est envoyée de manière sécurisée et n'est pas stockée. "
+        "<a href='https://aistudio.google.com/app/api-keys' target='_blank'>Obtenez votre clé API sur Google AI Studio.</a></small>",
+        unsafe_allow_html=True,
     )
 
     known_prefixes = {
