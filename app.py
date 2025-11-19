@@ -29,41 +29,9 @@ st.markdown("""
     .speaker-B { background-color: rgba(88, 28, 135, 0.3); border-color: #7e22ce; }
     .speaker-C { background-color: rgba(20, 83, 45, 0.3); border-color: #15803d; }
     .default-speaker { background-color: rgba(55, 65, 81, 0.3); border-color: #4b5563; }
-    .config-card,
-    .action-card {
-        border: 1px solid rgba(239, 68, 68, 0.6);
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        background-color: rgba(239, 68, 68, 0.08);
-    }
-    .action-card {
-        border-color: rgba(59, 130, 246, 0.6);
-        background-color: rgba(59, 130, 246, 0.08);
-    }
     .field-label {
         font-weight: 600;
         margin-bottom: 0.5rem;
-    }
-    .radio-option {
-        display: block;
-        white-space: normal;
-        line-height: 1.35;
-    }
-    .radio-option .label-main {
-        font-weight: 600;
-        display: block;
-    }
-    .radio-option .radio-desc {
-        font-size: 0.9rem;
-        color: #cbd5f5;
-        display: block;
-    }
-    div[data-testid="stRadio"] label > div:first-child {
-        align-items: flex-start;
-    }
-    div[data-testid="stRadio"] label span {
-        white-space: normal !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -141,9 +109,8 @@ def main():
         """
     )
 
-    st.markdown("### Configuration")
+    st.markdown('<h3 style="text-align: center;">Configuration</h3>', unsafe_allow_html=True)
 
-    st.markdown('<div class="config-card">', unsafe_allow_html=True)
     st.markdown('<div class="field-label">Votre Clé API Gemini</div>', unsafe_allow_html=True)
 
     api_key_input = st.text_input(
@@ -211,17 +178,27 @@ def main():
         },
     ]
 
-    option_indices = list(range(len(model_options)))
-    model_choice_index = st.radio(
-        "Choix du Modèle IA",
-        options=option_indices,
-        index=0,
-        format_func=lambda idx: f"<div class='radio-option'><span class='label-main'>{model_options[idx]['label']}</span>"
-        f"<span class='radio-desc'>{model_options[idx]['description']}</span></div>",
-        label_visibility="collapsed"
-    )
+    if "selected_model" not in st.session_state:
+        st.session_state["selected_model"] = model_options[0]["value"]
 
-    model_choice = model_options[model_choice_index]["value"]
+    def _set_model(selected_value):
+        st.session_state["selected_model"] = selected_value
+        for option in model_options:
+            st.session_state[f"model_option_{option['value']}"] = option["value"] == selected_value
+
+    for option in model_options:
+        checkbox_key = f"model_option_{option['value']}"
+        if checkbox_key not in st.session_state:
+            st.session_state[checkbox_key] = option["value"] == st.session_state["selected_model"]
+
+        st.checkbox(
+            f"{option['label']} — {option['description']}",
+            key=checkbox_key,
+            on_change=_set_model,
+            args=(option["value"],)
+        )
+
+    model_choice = st.session_state.get("selected_model", model_options[0]["value"])
 
     use_star_format = st.checkbox(
         "Formater le nom du locuteur (ex: *Locuteur_A)",
@@ -229,9 +206,6 @@ def main():
         help="Ajoute un astérisque et remplace les espaces par des underscores."
     )
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="action-card">', unsafe_allow_html=True)
     st.markdown('<div class="field-label">Importez votre fichier MP3</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader(
         "Importer un fichier MP3",
@@ -243,7 +217,6 @@ def main():
         st.audio(uploaded_file, format='audio/mp3')
 
     launch_clicked = st.button("Lancer l'application", type="primary", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if not clean_key:
         st.warning("Veuillez entrer votre clé API Gemini pour lancer une analyse.")
