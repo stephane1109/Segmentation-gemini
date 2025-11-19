@@ -32,10 +32,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def clean_api_key(key):
+    """Nettoie la clé API de tout caractère indésirable."""
+    if not key:
+        return ""
+    # Enlève les espaces, sauts de ligne, et guillemets accidentels
+    return key.strip().replace('\n', '').replace('\r', '').replace('"', '').replace("'", "")
+
 def process_audio(api_key, file_data, model_name):
     """Envoie l'audio à Gemini pour analyse."""
-    # Nettoyage de sécurité supplémentaire
-    clean_key = api_key.strip()
+    # Nettoyage de sécurité
+    clean_key = clean_api_key(api_key)
+    
+    # Initialisation du client
     client = genai.Client(api_key=clean_key)
     
     prompt = """
@@ -62,8 +71,7 @@ def process_audio(api_key, file_data, model_name):
     }
 
     try:
-        # Création d'un fichier temporaire pour l'audio car l'API attend des bytes ou un fichier
-        # Note: Streamlit fournit un objet BytesIO, nous lisons les bytes directement
+        # Lecture des bytes
         audio_bytes = file_data.read()
         
         response = client.models.generate_content(
@@ -84,12 +92,7 @@ def process_audio(api_key, file_data, model_name):
         
         return json.loads(response.text)
     except Exception as e:
-        # Gestion spécifique des erreurs courantes
-        error_str = str(e)
-        if "API key not valid" in error_str or "400" in error_str:
-            raise ValueError("La clé API semble invalide (Erreur 400). Vérifiez qu'il n'y a pas d'espaces au début ou à la fin de votre clé.")
-        if "429" in error_str:
-            raise ValueError("Quota dépassé (Erreur 429). Veuillez patienter ou utiliser une autre clé.")
+        # En cas d'erreur, on laisse remonter l'exception pour l'afficher avec le debug info dans le main
         raise e
 
 def main():
@@ -103,16 +106,22 @@ def main():
         # Gestion de la clé API
         api_key_input = st.text_input("Clé API Gemini", type="password", help="Obtenez votre clé sur Google AI Studio")
         
-        # Vérification des secrets Streamlit si la clé n'est pas entrée manuellement
+        # Vérification des secrets Streamlit
         api_key = api_key_input
         if not api_key and "GOOGLE_API_KEY" in st.secrets:
             api_key = st.secrets["GOOGLE_API_KEY"]
             st.success("Clé API détectée dans les secrets.")
         
-        # IMPORTANT : Nettoyage de la clé (retrait des espaces invisibles)
-        if api_key:
-            api_key = api_key.strip()
+        # Nettoyage immédiat pour la validation
+        clean_key = clean_api_key(api_key)
 
+        # Validation visuelle pour l'utilisateur
+        if clean_key:
+            if not clean_key.startswith("AIza"):
+                st.error("⚠️ La clé ne semble pas valide (elle doit commencer par 'AIza').")
+            elif len(clean_key) < 30:
+                st.warning("⚠️ La clé semble trop courte.")
+        
         st.divider()
         
         model_choice = st.radio(
@@ -122,7 +131,7 @@ def main():
             help="Flash est plus rapide, Pro est plus précis."
         )
         
-        # Mapping des noms conviviaux aux noms techniques
+        # Mapping des noms
         model_map = {
             "gemini-2.5-flash": "gemini-2.5-flash",
             "gemini-2.5-pro": "gemini-2.5-pro", 
@@ -132,7 +141,7 @@ def main():
         use_star_format = st.checkbox("Format *Locuteur_A", value=True, help="Ajoute un astérisque et remplace les espaces par des underscores.")
 
     # --- Main Content ---
-    if not api_key:
+    if not clean_key:
         st.warning("Veuillez entrer votre clé API Gemini dans la barre latérale pour commencer.")
         return
 
@@ -144,11 +153,11 @@ def main():
         if st.button("Lancer l'analyse", type="primary"):
             with st.spinner("Analyse en cours avec Gemini... Cela peut prendre quelques instants."):
                 try:
-                    # Reset file pointer just in case
+                    # Reset file pointer
                     uploaded_file.seek(0)
                     
                     # Traitement
-                    result = process_audio(api_key, uploaded_file, model_map.get(model_choice, "gemini-2.5-flash"))
+                    result = process_audio(clean_key, uploaded_file, model_map.get(model_choice, "gemini-2.5-flash"))
                     
                     st.success(f"Analyse terminée ! {len(result)} segments détectés.")
                     
@@ -190,10 +199,24 @@ def main():
                         mime="text/plain"
                     )
                     
-                except ValueError as ve:
-                    st.error(f"❌ Erreur : {str(ve)}")
                 except Exception as e:
-                    st.error(f"❌ Une erreur inattendue est survenue : {str(e)}")
+                    st.error("❌ Une erreur est survenue lors de l'analyse.")
+                    
+                    # Affichage technique de l'erreur
+                    st.code(str(e), language="text")
+                    
+                    # Section de débogage pour la clé API
+                    with st.expander("ℹ️ Informations de débogage (Clé API)"):
+                        mask_len = len(clean_key)
+                        if mask_len > 8:
+                            masked_key = f"{clean_key[:4]}...{clean_key[-4:]}"
+                        else:
+                            masked_key = "Trop courte pour afficher"
+                        
+                        st.write(f"**Longueur de la clé reçue :** {mask_len}")
+                        st.write(f"**Aperçu de la clé utilisée :** `{masked_key}`")
+                        st.write("**Vérification :** Assurez-vous que cet aperçu correspond au début et à la fin de votre clé réelle.")
+                        st.write("Si vous voyez des guillemets ou des espaces inattendus, corrigez votre fichier de secrets ou votre entrée.")
 
 if __name__ == "__main__":
     main()
