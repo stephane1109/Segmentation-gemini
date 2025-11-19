@@ -33,6 +33,16 @@ st.markdown("""
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
+    .blue-dialog {
+        background-color: rgba(59, 130, 246, 0.85);
+        color: #e0f2ff;
+        border: 1px solid rgba(191, 219, 254, 0.6);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        text-align: center;
+        font-weight: 600;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -110,7 +120,7 @@ def main():
 
     st.markdown(
         '<p style="text-align: center; margin: 0.5rem 0 0;">'
-        '<a href="https://www.codeandcortex.fr" target="_blank" style="color: #61dafb; text-decoration: none;">www.codeandcortex.fr</a>'
+        '<a href="https://www.codeandcortex.fr" target="_blank" style="color: #3b82f6; text-decoration: underline;">www.codeandcortex.fr</a>'
         "</p>",
         unsafe_allow_html=True,
     )
@@ -237,7 +247,10 @@ def main():
     launch_clicked = st.button("Lancer l'application", type="primary", use_container_width=True)
 
     if not clean_key:
-        st.warning("Veuillez entrer votre clé API Gemini pour lancer une analyse.")
+        st.markdown(
+            "<div class='blue-dialog'>Veuillez entrer votre clé API Gemini pour lancer une analyse.</div>",
+            unsafe_allow_html=True,
+        )
         return
 
     if launch_clicked:
