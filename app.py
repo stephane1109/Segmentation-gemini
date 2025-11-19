@@ -121,7 +121,7 @@ def main():
         """
         Fournissez votre clé API, choisissez le modèle adapté à votre audio, puis téléchargez un MP3.
         Le modèle Gemini 2.5 Flash offre un quota gratuit généreux. Le modèle Gemini 3.0 peut offrir une meilleure précision.
-        Pour les détails complets, <a href="https://ai.google.dev/gemini-api/docs/pricing?hl=fr" target="_blank"><mark>consultez la tarification officielle de l'API Gemini</mark></a>.
+        Pour les détails complets, <a href="https://ai.google.dev/gemini-api/docs/pricing?hl=fr" target="_blank">consultez la tarification officielle de l'API Gemini</a>.
         """,
         unsafe_allow_html=True,
     )
@@ -176,7 +176,7 @@ def main():
                 "Récupérez une clé Google AI Studio (préfixe `AIza` ou `gsk_`)."
             )
 
-    st.markdown('<div class="field-label" style="margin-top: 1rem;">Choix du Modèle IA</div>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #ff2d2d;">Choix du Modèle IA</h3>', unsafe_allow_html=True)
 
     model_options = [
         {
