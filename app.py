@@ -116,11 +116,24 @@ def main():
         clean_key = clean_api_key(api_key)
 
         # Validation visuelle pour l'utilisateur
+        known_prefixes = {
+            "AIza": "Google AI Studio",
+            "gsk_": "Google AI Service Account",
+            "hf_": "Hugging Face secret proxy",
+        }
+
         if clean_key:
-            if not clean_key.startswith("AIza"):
-                st.error("⚠️ La clé ne semble pas valide (elle doit commencer par 'AIza').")
-            elif len(clean_key) < 30:
+            if len(clean_key) < 30:
                 st.warning("⚠️ La clé semble trop courte.")
+
+            if not any(clean_key.startswith(prefix) for prefix in known_prefixes):
+                st.info(
+                    "ℹ️ Format de clé inattendu. Vérifiez qu'elle provient bien de Google AI Studio ou "
+                    "d'une intégration approuvée."
+                )
+            else:
+                detected = [name for prefix, name in known_prefixes.items() if clean_key.startswith(prefix)][0]
+                st.caption(f"Clé détectée : {detected}.")
         
         st.divider()
         
