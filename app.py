@@ -1,4 +1,4 @@
-import streamlit as st
+mport streamlit as st
 import os
 import tempfile
 import json
@@ -34,7 +34,9 @@ st.markdown("""
 
 def process_audio(api_key, file_data, model_name):
     """Envoie l'audio à Gemini pour analyse."""
-    client = genai.Client(api_key=api_key)
+    # Nettoyage de sécurité supplémentaire
+    clean_key = api_key.strip()
+    client = genai.Client(api_key=clean_key)
     
     prompt = """
     Analysez le fichier audio fourni et effectuez une segmentation des locuteurs.
@@ -82,10 +84,16 @@ def process_audio(api_key, file_data, model_name):
         
         return json.loads(response.text)
     except Exception as e:
+        # Gestion spécifique des erreurs courantes
+        error_str = str(e)
+        if "API key not valid" in error_str or "400" in error_str:
+            raise ValueError("La clé API semble invalide (Erreur 400). Vérifiez qu'il n'y a pas d'espaces au début ou à la fin de votre clé.")
+        if "429" in error_str:
+            raise ValueError("Quota dépassé (Erreur 429). Veuillez patienter ou utiliser une autre clé.")
         raise e
 
 def main():
-    st.title("Ségmentation MP3 (Diarization) avec Gemini")
+    st.title("🎙️ Diarisation MP3 avec Gemini")
     st.markdown("Segmentation des locuteurs et transcription automatique.")
 
     # --- Sidebar Configuration ---
@@ -93,12 +101,17 @@ def main():
         st.header("Configuration")
         
         # Gestion de la clé API
-        api_key = st.text_input("Clé API Gemini", type="password", help="Obtenez votre clé sur Google AI Studio")
+        api_key_input = st.text_input("Clé API Gemini", type="password", help="Obtenez votre clé sur Google AI Studio")
         
         # Vérification des secrets Streamlit si la clé n'est pas entrée manuellement
+        api_key = api_key_input
         if not api_key and "GOOGLE_API_KEY" in st.secrets:
             api_key = st.secrets["GOOGLE_API_KEY"]
             st.success("Clé API détectée dans les secrets.")
+        
+        # IMPORTANT : Nettoyage de la clé (retrait des espaces invisibles)
+        if api_key:
+            api_key = api_key.strip()
 
         st.divider()
         
@@ -171,14 +184,16 @@ def main():
                     
                     # Zone de téléchargement
                     st.download_button(
-                        label="Télécharger la transcription (.txt)",
+                        label="📥 Télécharger la transcription (.txt)",
                         data=output_text,
                         file_name=f"{uploaded_file.name}_diarisation.txt",
                         mime="text/plain"
                     )
                     
+                except ValueError as ve:
+                    st.error(f"❌ Erreur : {str(ve)}")
                 except Exception as e:
-                    st.error(f"Une erreur est survenue : {str(e)}")
+                    st.error(f"❌ Une erreur inattendue est survenue : {str(e)}")
 
 if __name__ == "__main__":
     main()
