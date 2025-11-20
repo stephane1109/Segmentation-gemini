@@ -129,8 +129,9 @@ def main():
 
     st.markdown(
         """
-        Fournissez votre clé API, choisissez le modèle adapté à votre audio, puis téléchargez un MP3.
-        Le modèle Gemini 2.5 Flash offre un quota gratuit généreux. Le modèle Gemini 3.0 peut offrir une meilleure précision.
+        La segmentation (ou « diarization » en anglais) vise à découper un enregistrement audio en segments et à identifier « qui parle quand ».
+        L’algorithme détecte les changements de locuteur et attribue un label à chaque voix (par exemple Locuteur 1, Locuteur 2,...). 
+        On obtient ainsi une transcription de la conversation structurée par intervenant, ce qui permet ensuite d’analyser le contenu par personne (qui pose quelles questions, qui répond, combien de temps chacun parle,...).
         Pour les détails complets, <a href="https://ai.google.dev/gemini-api/docs/pricing?hl=fr" target="_blank">consultez la tarification officielle de l'API Gemini</a>.
         """,
         unsafe_allow_html=True,
@@ -176,11 +177,11 @@ def main():
 
     if clean_key:
         if len(clean_key) < 30:
-            st.warning("⚠️ La clé semble trop courte.")
+            st.warning("La clé semble trop courte.")
 
         if not any(clean_key.startswith(prefix) for prefix in known_prefixes):
             st.info(
-                "ℹ️ Format de clé inattendu. Vérifiez qu'elle provient bien de Google AI Studio ou "
+                "Format de clé inattendu. Vérifiez qu'elle provient bien de Google AI Studio ou "
                 "d'une intégration approuvée."
             )
         else:
