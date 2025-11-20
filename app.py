@@ -65,9 +65,10 @@ def process_audio(api_key, file_data, model_name):
     Analysez le fichier audio fourni et effectuez une segmentation des locuteurs.
     Votre tâche est d'identifier chaque locuteur et de transcrire leur discours.
     La sortie doit être un tableau JSON valide. Chaque objet du tableau doit représenter un segment de parole et doit contenir les trois champs suivants :
-    1. "speaker": Une chaîne de caractères identifiant le locuteur (par exemple, "Locuteur A", "Locuteur B").
+    1. "speaker": Une chaîne de caractères identifiant le locuteur (par exemple, "Locuteur A", "Locuteur B"). Ne PAS ajouter de deux-points ou de symboles après le nom.
     2. "timestamp": Une chaîne de caractères représentant l'heure de début du segment de parole au format "HH:MM:SS".
     3. "text": Une chaîne de caractères contenant le texte transcrit pour ce segment.
+    Le résultat DOIT être un JSON strict, sans texte avant ou après, ni commentaires, ni champs supplémentaires.
     """
 
     # Configuration du schéma de réponse JSON
@@ -103,7 +104,10 @@ def process_audio(api_key, file_data, model_name):
                 response_schema=response_schema
             )
         )
-        
+
+        if getattr(response, "parsed", None) is not None:
+            return response.parsed
+
         return json.loads(response.text)
     except Exception as e:
         # En cas d'erreur, on laisse remonter l'exception pour l'afficher avec le debug info dans le main
@@ -314,6 +318,12 @@ def main():
                 st.error("❌ Une erreur est survenue lors de l'analyse.")
 
                 st.code(str(e), language="text")
+
+                if isinstance(e, json.JSONDecodeError):
+                    st.info(
+                        "La réponse n'était pas un JSON strict. Vérifiez que le modèle ne renvoie que le tableau JSON, "
+                        "sans texte supplémentaire ni colonnes après les noms de locuteurs. Réessayez ou utilisez un autre modèle."
+                    )
 
                 error_text = str(e).lower()
                 if "api key not valid" in error_text or "api_key_invalid" in error_text:
