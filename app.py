@@ -205,17 +205,17 @@ def main():
         {
             "value": "gemini-2.5-flash",
             "label": "Gemini 2.5 Flash",
-            "description": "Le choix le plus rapide et économique. Parfait pour les enregistrements clairs.",
+            "description": "Le choix le plus rapide et économique. Peu précis, à éviter pour des longs enregistrements.",
         },
         {
             "value": "gemini-2.5-pro",
             "label": "Gemini 2.5 Pro",
-            "description": "Offre une précision accrue pour les audios complexes.",
+            "description": "La référence ! Offre une précision accrue.",
         },
         {
             "value": "gemini-3.0-pro",
             "label": "Gemini 3.0",
-            "description": "Modèle de nouvelle génération pour un raisonnement et une précision maximale.",
+            "description": "Ne fonctionne pas pour le momement....",
         },
     ]
 
