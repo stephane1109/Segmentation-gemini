@@ -166,12 +166,13 @@ def main():
         unsafe_allow_html=True,
     )
 
-    if not clean_key:
+    key_missing = not clean_key
+
+    if key_missing:
         st.markdown(
             "<div class='blue-dialog'>Veuillez entrer votre clé API Gemini pour lancer une analyse.</div>",
             unsafe_allow_html=True,
         )
-        return
 
     known_prefixes = {
         "AIza": "Google AI Studio",
@@ -256,13 +257,19 @@ def main():
     uploaded_file = st.file_uploader(
         "Importer un fichier MP3",
         type=["mp3"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        disabled=key_missing
     )
 
     if uploaded_file is not None:
         st.audio(uploaded_file, format='audio/mp3')
 
-    launch_clicked = st.button("Lancer l'application", type="primary", use_container_width=True)
+    launch_clicked = st.button(
+        "Lancer l'application",
+        type="primary",
+        use_container_width=True,
+        disabled=key_missing
+    )
 
     if launch_clicked:
         if uploaded_file is None:
