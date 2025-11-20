@@ -245,7 +245,7 @@ def main():
     remove_timestamp_text = st.checkbox(
         "Supprimer les timestamps du fichier texte",
         value=False,
-        help="Le fichier .txt téléchargé n'inclura pas les timestamps ni les deux-points après le nom du locuteur."
+        help="Le fichier .txt téléchargé n'inclura pas les timestamps."
     )
 
     st.markdown('<h3 style="text-align: center; color: #ff2d2d;">Importez votre fichier MP3</h3>', unsafe_allow_html=True)
@@ -287,7 +287,7 @@ def main():
                     if remove_timestamp_text:
                         prefix = display_speaker
                     else:
-                        prefix = f"[{timestamp}] {display_speaker}:"
+                        prefix = f"[{timestamp}] {display_speaker}"
 
                     output_text += f"{prefix}\n{text}\n\n"
 
